@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.kdatalab.scheduler.job.mapper.SchedulerMapper">
+    <insert id="insertLog" parameterType="java.util.HashMap">
+        <selectKey resultType="int" keyProperty="seq" order="BEFORE">
+            select coalesce(max(seq),0)+1 as seq
+            from temp_login_history
+        </selectKey>
+        INSERT INTO temp_login_history(
+        seq,
+        company,
+        id,
+        ip,
+        datetime)
+        VALUES (
+                #{seq},
+                #{company},
+                #{id},
+                #{ip},
+                (
+                    SELECT STR_TO_DATE(
+                    CONCAT(
+                            CONCAT(date_format(now(), '%Y-%m-%d')),#{randomHours},':',(SELECT FLOOR(#{Mmin} + (RAND() * (#{Mmax}-#{Mmin})))),':',(SELECT FLOOR((RAND() * 59)))
+                        ), '%Y-%m-%d %H:%i:%s'
+                    ) FROM dual
+                )
+            )
+    </insert>
+    <insert id="insertAddLog" parameterType="java.util.HashMap">
+        <selectKey resultType="int" keyProperty="seq" order="BEFORE">
+            select coalesce(max(seq),0)+1 as seq
+            from temp_login_history
+        </selectKey>
+        INSERT INTO temp_login_history(
+        seq,
+        company,
+        id,
+        ip,
+        datetime
+        ) VALUES(
+                #{seq},
+                #{company},
+                #{id},
+                #{ip},
+                (
+                    SELECT STR_TO_DATE(
+                    CONCAT(
+                            CONCAT(date_format(now(),'%Y-%m-%d')),(SELECT FLOOR(#{Hmin} + (RAND() * (#{Hmax}-#{Hmin})))),':',(SELECT FLOOR((RAND() * 59))),':',(SELECT FLOOR((RAND() * 59)))
+                            ), '%Y-%m-%d %H:%i:%s'
+                    ) FROM dual
+                )
+            )
+    </insert>
+    <select id="getLogDataList" resultType="hashmap">
+        SELECT * FROM temp_login_history
+        WHERE 1=1
+          AND datetime LIKE CONCAT(date_format(now(),'%Y-%m-%d'),'%')
+    </select>
+</mapper>
